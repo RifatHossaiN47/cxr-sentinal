@@ -48,9 +48,12 @@ export function LandingView({ onAnalyze }: { onAnalyze: (file: File) => void }) 
     <div className="w-full max-w-5xl mx-auto px-4 py-4 md:py-8 flex flex-col justify-center items-center h-full min-h-0">
       {/* Hero Section */}
       <div className="text-center mb-6 md:mb-10 space-y-2">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-          CXR-Sentinel
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <img src="/logo.png" alt="CXR-Sentinel Logo" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            CXR-Sentinel
+          </h1>
+        </div>
         <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           AI-assisted chest X-ray analysis — research prototype
         </p>

@@ -6,13 +6,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { AlertTriangle, CheckCircle, Info, Copy, Printer, FileText, Beaker, User, Layers, CheckSquare, Search, FileJson, Settings, Eye, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
+import { AlertTriangle, CheckCircle, Info, Copy, Printer, FileText, User, Layers, CheckSquare, Search, Settings, Eye, ArrowLeft } from "lucide-react";
 import { ClassificationChart } from "./ClassificationChart";
 
 export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAnalysis; imageUrl: string; onReset?: () => void }) {
   const [showRoi, setShowRoi] = useState(true);
-  const [showJson, setShowJson] = useState(false);
 
   const isFlagged = result.uncertainty.status === "FLAGGED_FOR_REVIEW";
   
@@ -26,7 +24,7 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
   };
 
   return (
-    <div className="w-full max-w-none px-2 md:px-4 py-2 font-sans print:p-0 print:m-0 h-full flex flex-col">
+    <div className="w-full max-w-none px-2 md:px-4 py-2 font-sans print:p-0 print:m-0 h-auto flex flex-col pb-16 lg:pb-8">
       
       {/* 8.5 Confidence / Review Banner */}
       <div className={`shrink-0 w-full rounded-xl p-2 md:p-3 mb-2 flex flex-col md:flex-row items-center justify-between shadow-sm border ${
@@ -72,10 +70,10 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
       </div>
 
       {/* Main 3-Column Bento Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-2 flex-1 min-h-0 items-stretch">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0 items-start">
         
         {/* Left Column: Image + ROI panel */}
-        <Card className="xl:col-span-3 p-3 flex flex-col gap-3 shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-sm print:break-inside-avoid h-full">
+        <Card className="xl:col-span-3 p-3 flex flex-col gap-3 shadow-sm border-slate-200 dark:border-slate-800 dark:bg-slate-900/80 backdrop-blur-sm print:break-inside-avoid h-auto min-h-[350px]">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-sm">
               <Layers className="w-4 h-4 text-primary dark:text-blue-400" />
@@ -122,7 +120,7 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
         </Card>
 
         {/* Middle Column: Stats, Classification, Report */}
-        <div className="xl:col-span-6 flex flex-col gap-2 h-full overflow-hidden">
+        <div className="xl:col-span-6 flex flex-col gap-4 h-auto">
           
           {/* Header stat row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 print:grid-cols-4 shrink-0">
@@ -163,7 +161,7 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
                 <CheckSquare className="w-4 h-4 text-primary dark:text-blue-400" />
                 <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Classification</h3>
               </div>
-              <div className="flex-1 min-h-0">
+              <div className="flex-1 min-h-[250px]">
                 <ClassificationChart data={result.classification} />
               </div>
             </Card>
@@ -194,7 +192,7 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
                 </div>
               </div>
 
-              <div className="flex-1 space-y-2 text-[11px] text-slate-700 dark:text-slate-300 leading-snug overflow-hidden">
+              <div className="flex-1 space-y-2 text-[11px] text-slate-700 dark:text-slate-300 leading-snug">
                 <div>
                   <h4 className="font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider text-[9px] mb-0.5">Findings</h4>
                   <p>{result.report.findings}</p>
@@ -214,7 +212,7 @@ export function ResultsDashboard({ result, imageUrl, onReset }: { result: CxrAna
         </div>
 
         {/* Right Column: Agent Trace Timeline */}
-        <Card className="xl:col-span-3 p-3 border-slate-200 dark:border-slate-800 dark:bg-slate-900/80 shadow-sm flex flex-col h-full print:hidden">
+        <Card className="xl:col-span-3 p-3 border-slate-200 dark:border-slate-800 dark:bg-slate-900/80 shadow-sm flex flex-col h-auto print:hidden">
           <div className="flex items-center gap-2 mb-2 shrink-0">
             <User className="w-4 h-4 text-primary dark:text-blue-400" />
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">Simulated Agent Trace</h3>

@@ -9,6 +9,7 @@ export function DisclaimerBadge() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     // Optional feature: capture=true to hide disclaimer for the final screenshot
     const params = new URLSearchParams(window.location.search);

@@ -34,9 +34,6 @@ export default function Home() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (appState === "ANALYZING") {
-      setProgress(0);
-      setStageIndex(0);
-      
       const stageDuration = 2000; // ms per stage roughly
       const updateInterval = 100; // ms
       
@@ -47,7 +44,7 @@ export default function Home() {
           return prev + (100 / (STAGES.length * (stageDuration / updateInterval)));
         });
         
-        setStageIndex((prev) => {
+        setStageIndex(() => {
           const nextStage = Math.floor((progress / 100) * STAGES.length);
           return Math.min(nextStage, STAGES.length - 1);
         });
@@ -59,6 +56,8 @@ export default function Home() {
 
   const handleAnalyze = async (file: File) => {
     setAppState("ANALYZING");
+    setProgress(0);
+    setStageIndex(0);
     setError(null);
     
     const objUrl = URL.createObjectURL(file);
@@ -90,8 +89,12 @@ export default function Home() {
         setAppState("RESULTS");
       }, 500);
 
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "An unexpected error occurred.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
       setAppState("LANDING");
       if (imageUrl) {
         URL.revokeObjectURL(objUrl);
@@ -101,7 +104,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen md:h-screen md:max-h-screen md:overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-50 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden relative">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-50 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden relative">
       {/* Decorative blurred background element for website feel */}
       <div className="absolute top-0 right-0 -mr-48 -mt-48 w-96 h-96 rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-[100px] pointer-events-none z-0"></div>
       
@@ -117,7 +120,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full flex flex-col overflow-y-auto md:overflow-hidden"
+              className="w-full min-h-screen flex flex-col py-8"
             >
               {error && (
                 <div className="max-w-2xl mx-auto pt-8 px-4 w-full">
@@ -141,9 +144,15 @@ export default function Home() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col items-center justify-center min-h-screen md:min-h-0 md:h-full p-4 max-w-md mx-auto w-full"
+              className="flex flex-col items-center justify-center min-h-screen p-4 max-w-md mx-auto w-full"
             >
             <div className="w-full space-y-4">
+                <div className="flex flex-col items-center mb-6">
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                    <img src="/logo.png" alt="CXR-Sentinel Logo" className="relative w-16 h-16 object-contain animate-pulse duration-2000" />
+                  </div>
+                </div>
                 <div className="flex justify-between items-end mb-2">
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Processing X-Ray</h3>
                   <span className="text-sm font-mono text-slate-500 dark:text-slate-400">{Math.round(progress)}%</span>
@@ -163,7 +172,7 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
-              className="w-full h-full flex flex-col overflow-y-auto md:overflow-hidden"
+              className="w-full min-h-screen flex flex-col"
             >
               <ResultsDashboard result={result} imageUrl={imageUrl} onReset={() => {
                 setAppState("LANDING");

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CXR-Sentinel Prototype",
-  description: "Research prototype for uncertainty-aware chest X-ray analysis",
+  title: "CXR-Sentinel | Multi-Agent AI Radiology",
+  description: "A multimodal AI backend emulating a five-stage perception-retrieval-generation-QA workflow for Chest X-Ray analysis.",
 };
 
 export default function RootLayout({
@@ -23,6 +23,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} font-sans h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider
