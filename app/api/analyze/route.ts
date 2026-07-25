@@ -15,6 +15,8 @@ real patient's condition. Write in a confident, terse clinical register througho
 AI-ish hedging phrases like "I think" or "it appears that I". Analyze the attached frontal chest
 X-ray image and respond ONLY with JSON matching the provided schema.
 
+0. IMAGE VALIDATION: Look at the image first. Is it a medical chest X-ray? If it is a picture of an animal, an apple, a car, a selfie, or any image that is clearly NOT a medical chest X-ray, you MUST set "is_valid_xray": false. If it is a chest X-ray, set "is_valid_xray": true. If false, you can leave the rest of the fields with empty or dummy values.
+
 1. CLASSIFICATION: Assess exactly these 14 findings, using exactly these four statuses:
    "Positive", "Negative", "Uncertain", "Not Mentioned".
    Atelectasis, Cardiomegaly, Consolidation, Edema, Enlarged Cardiomediastinum, Fracture,
@@ -56,6 +58,10 @@ Respond with JSON only, no prose outside the JSON structure.
 const responseSchema: Schema = {
   type: Type.OBJECT,
   properties: {
+    is_valid_xray: {
+      type: Type.BOOLEAN,
+      description: "True if the image is a Chest X-Ray. False if it is not a medical chest X-ray (e.g. an apple, an animal, a selfie)."
+    },
     classification: {
       type: Type.ARRAY,
       items: {

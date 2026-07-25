@@ -21,7 +21,7 @@ const STAGES = [
 ];
 
 export default function Home() {
-  const [appState, setAppState] = useState<"LANDING" | "ANALYZING" | "RESULTS">("LANDING");
+  const [appState, setAppState] = useState<"LANDING" | "ANALYZING" | "RESULTS" | "INVALID_IMAGE">("LANDING");
   const [result, setResult] = useState<CxrAnalysis | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +85,12 @@ export default function Home() {
       
       // Small delay for UX transition
       setTimeout(() => {
-        setResult(data);
-        setAppState("RESULTS");
+        if (data.is_valid_xray === false) {
+          setAppState("INVALID_IMAGE");
+        } else {
+          setResult(data);
+          setAppState("RESULTS");
+        }
       }, 500);
 
     } catch (err: unknown) {
@@ -176,9 +180,45 @@ export default function Home() {
             >
               <ResultsDashboard result={result} imageUrl={imageUrl} onReset={() => {
                 setAppState("LANDING");
-                setImageUrl(null);
                 setResult(null);
+                setImageUrl(null);
+                setProgress(0);
+                setStageIndex(0);
               }} />
+            </motion.div>
+          )}
+
+          {appState === "INVALID_IMAGE" && (
+            <motion.div
+              key="invalid"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center min-h-screen p-4 w-full"
+            >
+              <div className="max-w-lg w-full bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-12 shadow-2xl border border-red-100 dark:border-red-900 text-center space-y-6">
+                <div className="w-20 h-20 bg-red-50 dark:bg-red-950/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-10 h-10 text-red-500 dark:text-red-400" />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50">Invalid Image Detected</h2>
+                <p className="text-slate-600 dark:text-slate-400 text-base md:text-lg">
+                  The AI backend determined that the uploaded image is <strong className="text-slate-800 dark:text-slate-200">not a medical chest X-ray</strong>.
+                  This prototype is strictly designed to emulate a radiology workflow and cannot analyze general photography, screenshots, or unrelated medical imaging.
+                </p>
+                <div className="pt-6">
+                  <button 
+                    onClick={() => {
+                      setAppState("LANDING");
+                      setImageUrl(null);
+                      setProgress(0);
+                      setStageIndex(0);
+                    }}
+                    className="w-full py-4 bg-primary hover:bg-primary/90 text-white dark:bg-blue-600 dark:hover:bg-blue-500 rounded-xl font-bold text-lg transition-all active:scale-[0.98] shadow-lg shadow-blue-500/20"
+                  >
+                    Go Back & Upload X-Ray
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
           

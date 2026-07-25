@@ -34,6 +34,7 @@ export interface Uncertainty {
 }
 
 export interface CxrAnalysis {
+  is_valid_xray?: boolean;
   classification: ClassificationLabel[];
   report: { findings: string; impression: string };
   regions_of_interest: RegionOfInterest[];
