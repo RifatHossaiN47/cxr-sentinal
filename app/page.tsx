@@ -1,65 +1,186 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { LandingView } from "@/components/LandingView";
+import { ResultsDashboard } from "@/components/ResultsDashboard";
+import { CxrAnalysis } from "@/lib/types";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
+const STAGES = [
+  "Uploading image...",
+  "Stage 1: Multi-label Perception",
+  "Stage 2: Context Retrieval",
+  "Stage 3: Report Drafting & Refinement",
+  "Stage 4: Vision-Text QA Check",
+  "Stage 5: Synthesis & Uncertainty Estimation",
+  "Finalizing results..."
+];
 
 export default function Home() {
+  const [appState, setAppState] = useState<"LANDING" | "ANALYZING" | "RESULTS">("LANDING");
+  const [result, setResult] = useState<CxrAnalysis | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Progress state
+  const [progress, setProgress] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
+
+  // Fake staged progress animation - UI framing over a single call
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (appState === "ANALYZING") {
+      setProgress(0);
+      setStageIndex(0);
+      
+      const stageDuration = 2000; // ms per stage roughly
+      const updateInterval = 100; // ms
+      
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          // Cap at 95% until the actual response arrives
+          if (prev >= 95) return 95;
+          return prev + (100 / (STAGES.length * (stageDuration / updateInterval)));
+        });
+        
+        setStageIndex((prev) => {
+          const nextStage = Math.floor((progress / 100) * STAGES.length);
+          return Math.min(nextStage, STAGES.length - 1);
+        });
+      }, updateInterval);
+    }
+    
+    return () => clearInterval(interval);
+  }, [appState, progress]);
+
+  const handleAnalyze = async (file: File) => {
+    setAppState("ANALYZING");
+    setError(null);
+    
+    const objUrl = URL.createObjectURL(file);
+    setImageUrl(objUrl);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to analyze image");
+      }
+
+      const data = await res.json() as CxrAnalysis;
+      
+      // Jump to 100% instantly when done
+      setProgress(100);
+      setStageIndex(STAGES.length - 1);
+      
+      // Small delay for UX transition
+      setTimeout(() => {
+        setResult(data);
+        setAppState("RESULTS");
+      }, 500);
+
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+      setAppState("LANDING");
+      if (imageUrl) {
+        URL.revokeObjectURL(objUrl);
+        setImageUrl(null);
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="min-h-screen md:h-screen md:max-h-screen md:overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-50 via-slate-50 to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden relative">
+      {/* Decorative blurred background element for website feel */}
+      <div className="absolute top-0 right-0 -mr-48 -mt-48 w-96 h-96 rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-[100px] pointer-events-none z-0"></div>
+      
+      <ThemeToggle />
+      
+      <div className="relative z-10 w-full h-full flex flex-col">
+        <AnimatePresence mode="wait">
+          
+          {appState === "LANDING" && (
+            <motion.div 
+              key="landing"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="w-full h-full flex flex-col overflow-y-auto md:overflow-hidden"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {error && (
+                <div className="max-w-2xl mx-auto pt-8 px-4 w-full">
+                  <Alert variant="destructive" className="bg-red-50/80 dark:bg-red-950/80 backdrop-blur-sm border-red-200 dark:border-red-900 dark:text-red-200">
+                    <AlertCircle className="h-4 w-4 dark:text-red-200" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              <div className="flex-1 flex flex-col justify-center">
+                <LandingView onAnalyze={handleAnalyze} />
+              </div>
+            </motion.div>
+          )}
+
+          {appState === "ANALYZING" && (
+            <motion.div
+              key="analyzing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center justify-center min-h-screen md:min-h-0 md:h-full p-4 max-w-md mx-auto w-full"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <div className="w-full space-y-4">
+                <div className="flex justify-between items-end mb-2">
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Processing X-Ray</h3>
+                  <span className="text-sm font-mono text-slate-500 dark:text-slate-400">{Math.round(progress)}%</span>
+                </div>
+                <Progress value={progress} className="h-2 w-full bg-slate-200 dark:bg-slate-800" />
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-4 rounded-xl border border-white dark:border-slate-800 shadow-sm">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary dark:text-blue-400" />
+                  <span className="text-sm font-medium animate-pulse">{STAGES[stageIndex]}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {appState === "RESULTS" && result && imageUrl && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              className="w-full h-full flex flex-col overflow-y-auto md:overflow-hidden"
+            >
+              <ResultsDashboard result={result} imageUrl={imageUrl} onReset={() => {
+                setAppState("LANDING");
+                setImageUrl(null);
+                setResult(null);
+              }} />
+            </motion.div>
+          )}
+          
+        </AnimatePresence>
+      </div>
+
+      <div className="fixed bottom-3 w-full text-center z-50 pointer-events-none">
+        <a href="https://rifathossain47.vercel.app/" target="_blank" rel="noopener noreferrer" className="pointer-events-auto text-[10px] text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-blue-400 transition-colors bg-white/60 dark:bg-slate-900/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-sm inline-flex items-center gap-1">
+          Developed by <span className="font-semibold text-slate-700 dark:text-slate-200">Md Rifat Hossen</span>
+        </a>
+      </div>
+    </main>
   );
 }
